@@ -182,10 +182,16 @@ class Page:
         logger.info(f'tag:{tag} | items:{image_list}')
         
         for image in image_list:
+            
             image_link = 'https:'+image['src'] # extract the source link from the tag
+            
             if '.jpg' in image_link: # avoid all other formats
                 item = image_link.replace('i.4cdn.org','is2.4chan.org').replace('s.jpg','.jpg') # replace thumbnail links with original image 
                 images.append(item)
+            if '.png' in image_link:
+                item = image_link.replace('i.4cdn.org','is2.4chan.org').replace('s.png','.png') # replace thumbnail links with original image 
+                images.append(item)
+
         
         logger.info(f'No of images : {len(images)}')
         
@@ -224,10 +230,11 @@ class Page:
         
         count =0 
         for image in self.images:
+            extension = 'jpg' if '.jpg' in image else 'png'
             count+=1
             image_bytes = self.get_image_file(image) #fetch the image
             if image_bytes is None:continue
-            image_path = self.save_path+ f'/image_{count}.jpg' # path to save image 
+            image_path = self.save_path+ f'/image_{count}.{extension}' # path to save image 
             msg = self.save_image_file(image_bytes,image_path) # save image to path
             logger.info(f'Image saved as : {msg}')
 
@@ -238,7 +245,7 @@ class Page:
         self.corrupt_files = list()
         
         for filename in listdir(self.save_path):
-            if filename.endswith('.jpg'):
+            if filename.endswith('.jpg') or filename.endswith('.png'):
                 image_path = f'{self.save_path}/{filename}' # relative path of the image
                 try:
                     img = Image.open(image_path) # open the image file
