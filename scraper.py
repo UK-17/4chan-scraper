@@ -15,7 +15,11 @@ logger = logging.getLogger(__name__)
 class Metadata:
     
     """
-    Extracting metadata about all the boards on 4chan using its API.
+    Extracting metadata about all the boards on 4chan using its API:
+    1. Display List of boards on 4chan
+    2. Select a board.
+    3. Display all threads of the board.
+    4. Select a thread
     """
 
     TIMEOUT = 10 # global timeout for request function
@@ -31,6 +35,7 @@ class Metadata:
         self.board_code = self.select_board()
         self.threads = self.get_board_threads()
         self.display_threads_list()
+        self.thread_id = input('\nEnter Thread-ID : ')
     
     def get_boards_list(self) -> dict:
         
@@ -112,7 +117,7 @@ class Metadata:
 class Page:
 
     """ 
-    4chan.org Random Board Image Extractor. Takes thread-id as input. Extracts all images from the thread,
+    4chan.org Board Image Extractor. Takes thread-id as input. Extracts all images from the thread,
     saves them in a folder then checks for corrupt images and deletes them.
 
     """
@@ -134,6 +139,7 @@ class Page:
         self.page = self.get_page() # fetching the page
         self.soup = self.make_soup() # parsing the page
         self.images = self.get_images('img') # collection of all images in the page
+        self.extract_images() # running the driver function
 
     
     def make_dir(self) -> str:
@@ -288,12 +294,10 @@ def exec_main() -> None:
     
     """ Main driver function to run the code. """
     
+    logger.info(f'Execution started.')
     metadata = Metadata()
-    thread_id = input('\nEnter Thread-ID : ')
-    logger.info(f'Board Code:{metadata.board_code}|Thread-ID:{thread_id}')
-    page = Page(metadata.board_code,thread_id)
-    page.extract_images()
-    logger.info('Execution complete.')
+    page = Page(metadata.board_code,metadata.thread_id)
+    logger.info('Execution completed.')
 
 
 
