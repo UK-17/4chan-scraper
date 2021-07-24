@@ -117,7 +117,7 @@ class Page:
     """
     
     BASE_URL = 'https://boards.4chan.org/<board_code>/thread/' # root URL for every thread on random board
-    SAVE_DIR = str(os.curdir) # root folder for saving images 
+    SAVE_DIR = str(os.curdir)+'/data'# root folder for saving images 
     TIMEOUT = 10 # global timeout for requests made
     
     def __init__(self,board_code,thread:str) -> None:
