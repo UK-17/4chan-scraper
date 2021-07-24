@@ -37,3 +37,42 @@
 2021-07-24 14:14:21,304 | INFO   | Image saved as : File : ./859582068/image_10.jpg | __main__.get_and_save_all_images():85  
 2021-07-24 14:14:21,321 | CRITICAL | List of corrupt files:[] | __main__.check_for_corrupt_files():99  
 2021-07-24 14:14:21,321 | INFO   | Removing corrupt images. | __main__.delete_corrupt_files():102 
+2021-07-24 15:05:53,826 | INFO   | initializing Thread : 859578376 | __main__.__init__():29  
+2021-07-24 15:05:53,827 | INFO   | Making directory to save all images | __main__.make_dir():43  
+2021-07-24 15:05:53,827 | INFO   | New directory made: ./859578376 | __main__.make_dir():47  
+2021-07-24 15:05:53,827 | INFO   | Fetching page | URL:https://boards.4chan.org/b/thread/859578376 | __main__.get_page():56  
+2021-07-24 15:05:54,886 | INFO   | Parsing HTML content | BeautifulSoup+html5lib | __main__.make_soup():71  
+2021-07-24 15:05:54,939 | INFO   | tag:img | items:[<img alt="" src="//s.4cdn.org/image/contest_banners/0c3e75f8b0f48dc15a11a8ae95cd9a72d0472ce9.jpg"/>, <img alt="1.43 MB" data-md5="wke0EwQLBSb8Ht9s7bCXJQ==" loading="lazy" src="//i.4cdn.org/b/1627105623560s.jpg" style="height: 250px; width: 176px;"/>, <img alt="767 KB" data-md5="KunCz6r6dou03Oifmo87uw==" loading="lazy" src="//i.4cdn.org/b/1627105766981s.jpg" style="height: 125px; width: 83px;"/>, <img alt="986 KB" data-md5="0x8D0u3VxFLrQwn125L//g==" loading="lazy" src="//i.4cdn.org/b/1627106546183s.jpg" style="height: 125px; width: 93px;"/>, <img alt="1.31 MB" data-md5="K03ro+L7nUmZmHmhKxXhzw==" loading="lazy" src="//i.4cdn.org/b/1627107235675s.jpg" style="height: 125px; width: 100px;"/>, <img alt="350 KB" data-md5="doBQ8H0DmjNQCJ2Szpa9cg==" loading="lazy" src="//i.4cdn.org/b/1627108724201s.jpg" style="height: 125px; width: 96px;"/>, <img alt="315 KB" data-md5="wUpWeam2ZSkrcfgkPx9ETg==" loading="lazy" src="//i.4cdn.org/b/1627111596721s.jpg" style="height: 125px; width: 74px;"/>, <img alt="72 KB" data-md5="A0egz5tXTYpajfwkIZ8hww==" loading="lazy" src="//i.4cdn.org/b/1627117476540s.jpg" style="height: 125px; width: 83px;"/>, <img alt="144 KB" data-md5="NtsZAI4+IZ3gV/o59kBGSg==" loading="lazy" src="//i.4cdn.org/b/1627119060953s.jpg" style="height: 125px; width: 83px;"/>] | __main__.get_images():83  
+2021-07-24 15:05:54,939 | INFO   | No of images : 9 | __main__.get_images():91  
+2021-07-24 15:05:54,939 | INFO   | Fetching image | URL:https://s.4cdn.org/image/contest_banners/0c3e75f8b0f48dc15a11a8ae95cd9a72d0472ce9.jpg | __main__.get_image_file():99  
+2021-07-24 15:05:55,028 | INFO   | Writing image. | __main__.save_image_file():115 
+2021-07-24 15:05:55,029 | INFO   | Image saved as : File : ./859578376/image_1.jpg | __main__.get_and_save_all_images():133 
+2021-07-24 15:05:55,029 | INFO   | Fetching image | URL:https://is2.4chan.org/b/1627105623560.jpg | __main__.get_image_file():99  
+2021-07-24 15:06:29,620 | INFO   | Writing image. | __main__.save_image_file():115 
+2021-07-24 15:06:29,621 | INFO   | Image saved as : File : ./859578376/image_2.jpg | __main__.get_and_save_all_images():133 
+2021-07-24 15:06:29,628 | INFO   | Fetching image | URL:https://is2.4chan.org/b/1627105766981.jpg | __main__.get_image_file():99  
+2021-07-24 15:06:34,386 | INFO   | Writing image. | __main__.save_image_file():115 
+2021-07-24 15:06:34,388 | INFO   | Image saved as : File : ./859578376/image_3.jpg | __main__.get_and_save_all_images():133 
+2021-07-24 15:06:34,388 | INFO   | Fetching image | URL:https://is2.4chan.org/b/1627106546183.jpg | __main__.get_image_file():99  
+2021-07-24 15:06:39,534 | INFO   | Writing image. | __main__.save_image_file():115 
+2021-07-24 15:06:39,536 | INFO   | Image saved as : File : ./859578376/image_4.jpg | __main__.get_and_save_all_images():133 
+2021-07-24 15:06:39,536 | INFO   | Fetching image | URL:https://is2.4chan.org/b/1627107235675.jpg | __main__.get_image_file():99  
+2021-07-24 15:06:41,173 | INFO   | Writing image. | __main__.save_image_file():115 
+2021-07-24 15:06:41,173 | INFO   | Image saved as : File : ./859578376/image_5.jpg | __main__.get_and_save_all_images():133 
+2021-07-24 15:06:41,173 | INFO   | Fetching image | URL:https://is2.4chan.org/b/1627108724201.jpg | __main__.get_image_file():99  
+2021-07-24 15:06:51,924 | INFO   | Writing image. | __main__.save_image_file():115 
+2021-07-24 15:06:51,925 | INFO   | Image saved as : File : ./859578376/image_6.jpg | __main__.get_and_save_all_images():133 
+2021-07-24 15:06:51,926 | INFO   | Fetching image | URL:https://is2.4chan.org/b/1627111596721.jpg | __main__.get_image_file():99  
+2021-07-24 15:07:07,062 | INFO   | Writing image. | __main__.save_image_file():115 
+2021-07-24 15:07:07,063 | INFO   | Image saved as : File : ./859578376/image_7.jpg | __main__.get_and_save_all_images():133 
+2021-07-24 15:07:07,063 | INFO   | Fetching image | URL:https://is2.4chan.org/b/1627117476540.jpg | __main__.get_image_file():99  
+2021-07-24 15:07:11,556 | INFO   | Writing image. | __main__.save_image_file():115 
+2021-07-24 15:07:11,556 | INFO   | Image saved as : File : ./859578376/image_8.jpg | __main__.get_and_save_all_images():133 
+2021-07-24 15:07:11,564 | INFO   | Fetching image | URL:https://is2.4chan.org/b/1627119060953.jpg | __main__.get_image_file():99  
+2021-07-24 15:07:15,126 | INFO   | Writing image. | __main__.save_image_file():115 
+2021-07-24 15:07:15,127 | INFO   | Image saved as : File : ./859578376/image_9.jpg | __main__.get_and_save_all_images():133 
+2021-07-24 15:07:15,143 | ERROR  | cannot identify image file './859578376/image_5.jpg' | __main__.check_for_corrupt_files():148 
+2021-07-24 15:07:15,143 | CRITICAL | Corrupt File : image_5.jpg | __main__.check_for_corrupt_files():149 
+2021-07-24 15:07:15,144 | CRITICAL | List of corrupt files:['./859578376/image_5.jpg'] | __main__.check_for_corrupt_files():152 
+2021-07-24 15:07:15,144 | INFO   | Removing corrupt images. | __main__.delete_corrupt_files():157 
+2021-07-24 15:07:15,144 | INFO   | ./859578376/image_5.jpg deleted. | __main__.delete_corrupt_files():162 
