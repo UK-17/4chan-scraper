@@ -12,14 +12,16 @@ import json
 logging.config.fileConfig('logging.conf')
 logger = logging.getLogger(__name__)
 
+
+
 class Metadata:
     
     """
+
     Extracting metadata about all the boards on 4chan using its API:
-    1. Display List of boards on 4chan
-    2. Select a board.
-    3. Display all threads of the board.
-    4. Select a thread
+    1. Display List of boards on 4chan. Select a board from the list.
+    2. Display all threads of the board.Select a thread from the list.
+
     """
 
     TIMEOUT = 10 # global timeout for request function
@@ -31,11 +33,9 @@ class Metadata:
         """ Initialize all the metadata. Select board code. """
 
         self.boards_list = self.get_boards_list()
-        self.display_board_list()
         self.board_code = self.select_board()
         self.threads = self.get_board_threads()
-        self.display_threads_list()
-        self.thread_id = input('\nEnter Thread-ID : ')
+        self.thread_id = self.select_thread()
     
     def get_boards_list(self) -> dict:
         
@@ -106,19 +106,20 @@ class Metadata:
         display_view = display_view.sort_values(by='Images')
         print('\n')
         print(display_view.to_string(index=False))
+    
+    def select_thread(self) -> str:
+        self.display_threads_list()
+        thread_id = input('\nEnter Thread-ID : ')
+        return thread_id
+
+        
 
     
-
-
-
-
-
 
 class Page:
 
     """ 
-    4chan.org Board Image Extractor. Takes thread-id as input. Extracts all images from the thread,
-    saves them in a folder then checks for corrupt images and deletes them.
+    Extract all images from a given 4chan thread.
 
     """
     
