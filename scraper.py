@@ -88,8 +88,8 @@ class Metadata:
             for thread in threads:
                 thread_id = thread['no']
                 thread_info = thread['semantic_url']
-                no_of_images = thread['images']
-                threads_list.append((thread_id,thread_info,no_of_images)) # Thread-ID|Label|Images
+                no_of_images = int(thread['images'])
+                if no_of_images>0: threads_list.append((thread_id,thread_info,no_of_images)) # Thread-ID|Label|Images
         
         return threads_list
     
@@ -98,8 +98,9 @@ class Metadata:
         """ Display all threads on the selected board to select from. """
     
         display_view = pd.DataFrame(self.threads,columns=['Thread-ID','Label','Images'])
+        display_view = display_view.sort_values(by='Images')
         print('\n')
-        print(display_view.to_string())
+        print(display_view.to_string(index=False))
 
     
 
