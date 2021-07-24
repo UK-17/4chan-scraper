@@ -6,9 +6,107 @@ import requests
 from os import listdir
 from PIL import Image
 from bs4 import BeautifulSoup
+import pandas as pd
 from requests.models import Response
+import json
 logging.config.fileConfig('logging.conf')
 logger = logging.getLogger(__name__)
+
+class Metadata:
+    
+    """
+    Extracting metadata about all the boards on 4chan using its API.
+    """
+
+    TIMEOUT = 10 # global timeout for request function
+    BOARD_DATA = 'https://a.4cdn.org/boards.json' # to get list of boards
+    CATALOG_DATA = 'https://a.4cdn.org/<board_code>/catalog.json' # to get threads list
+    
+    def __init__(self) -> None:
+        
+        """ Initialize all the metadata. Select board code. """
+
+        self.boards_list = self.get_boards_list()
+        self.display_board_list()
+        self.board_code = self.select_board()
+        self.threads = self.get_board_threads()
+        self.display_threads_list()
+    
+    def get_boards_list(self) -> dict:
+        
+        """ Get a list of image boards and codes. """
+
+        try:
+            response = requests.get(Metadata.BOARD_DATA,timeout=Metadata.TIMEOUT) # make request to API
+        except Exception as e:
+            logger.error(e) # error in making request
+            logger.critical(f'Error in request. | URL : {Metadata.BOARD_DATA}')
+            return None
+        
+        raw_data = json.loads(response.content)['boards'] # extract json from response
+        boards_list = dict()
+        
+        for index,each in enumerate(raw_data):
+            boards_list[str(index)] = {"board_name":each['title'], "board_code":each['board']} # make custom dictionary
+
+        return boards_list
+    
+    def display_board_list(self) -> None:
+        
+        """ Display List of boards to select from """
+        
+        for index,details in self.boards_list.items():
+            print(f"{index}.{details['board_name']}")
+    
+    def select_board(self) -> str:
+
+        """ Driver function to select board. """
+        
+        print('Select a board')
+        self.display_board_list()
+        selected_board_index = input('\nEnter Board Number:')
+        selected_board_code = self.boards_list[selected_board_index]['board_code']
+        return selected_board_code
+    
+    def get_board_threads(self) -> list:
+        
+        """ Get a list of threads available for the board """
+        
+        threads_list = list()
+        url = self.CATALOG_DATA.replace('<board_code>',self.board_code) # getting threads for selected board
+        
+        try:
+            response = requests.get(url,timeout=self.TIMEOUT)
+        except Exception as e:
+            logger.error(e) # timeout error
+            logger.critical(f'Error in request | URL:{url}')
+            return None
+        
+        raw_data = json.loads(response.content)
+        for each in raw_data:
+            threads = each['threads']
+            for thread in threads:
+                thread_id = thread['no']
+                thread_info = thread['semantic_url']
+                no_of_images = thread['images']
+                threads_list.append((thread_id,thread_info,no_of_images)) # Thread-ID|Label|Images
+        
+        return threads_list
+    
+    def display_threads_list(self) -> None:
+
+        """ Display all threads on the selected board to select from. """
+    
+        display_view = pd.DataFrame(self.threads,columns=['Thread-ID','Label','Images'])
+        print('\n')
+        print(display_view.to_string())
+
+    
+
+
+
+
+
 
 class Page:
 
@@ -18,15 +116,16 @@ class Page:
 
     """
     
-    BASE_URL = 'https://boards.4chan.org/b/thread/' # root URL for every thread on random board
+    BASE_URL = 'https://boards.4chan.org/<board_code>/thread/' # root URL for every thread on random board
     SAVE_DIR = str(os.curdir) # root folder for saving images 
     TIMEOUT = 10 # global timeout for requests made
     
-    def __init__(self,thread:str) -> None:
+    def __init__(self,board_code,thread:str) -> None:
         
         """ Inititalizing class and getting the page information. """
         
         logger.info(f'initializing Thread : {thread}')
+        self.BASE_URL = self.BASE_URL.replace('<board_code>',board_code)
         
         self.thread_id = thread # thread-ID from the board
         self.save_path = self.make_dir() # making a directory to save all images
@@ -108,7 +207,7 @@ class Page:
         
         return image_bytes
     
-    def save_image_file(self,image_bytes,image_path):
+    def save_image_file(self,image_bytes,image_path) -> str:
         
         """ Save each image to the directory. """
         
@@ -119,7 +218,7 @@ class Page:
         
         return f'File : {image_path}'
     
-    def get_and_save_all_images(self):
+    def get_and_save_all_images(self) -> None:
         
         """ Driver function to fetch and save each image in the list. """
         
@@ -132,7 +231,7 @@ class Page:
             msg = self.save_image_file(image_bytes,image_path) # save image to path
             logger.info(f'Image saved as : {msg}')
 
-    def check_for_corrupt_files(self):
+    def check_for_corrupt_files(self) -> None:
         
         """ Verify the images and catch the corrupt ones."""
         
@@ -151,7 +250,8 @@ class Page:
         
         logger.critical(f'List of corrupt files:{self.corrupt_files}')
     
-    def delete_corrupt_files(self):
+    def delete_corrupt_files(self) -> None:
+        
         """ Delete the files which were categorized as corrupt. """
 
         logger.info('Removing corrupt images.')
@@ -162,11 +262,34 @@ class Page:
                 logger.info(f'{file} deleted.')
             else:
                 logger.critical(f'{file} does not exist')
+        
+        logger.info(f'Removed {len(self.corrupt_files)} files.')
+    
+    def extract_images(self) -> None:
+
+        """ Driver function to extract the images and save them. """
+
+        self.get_and_save_all_images()
+        self.check_for_corrupt_files()
+        self.delete_corrupt_files()
+
+
+
+
+def exec_main() -> None:
+    
+    """ Main driver function to run the code. """
+    
+    metadata = Metadata()
+    thread_id = input('\nEnter Thread-ID : ')
+    logger.info(f'Board Code:{metadata.board_code}|Thread-ID:{thread_id}')
+    page = Page(metadata.board_code,thread_id)
+    page.extract_images()
+    logger.info('Execution complete.')
+
+
 
         
 
 if __name__=="__main__":
-    page = Page(input('Enter thread ID :'))
-    page.get_and_save_all_images()
-    page.check_for_corrupt_files()
-    page.delete_corrupt_files()
+    exec_main()
