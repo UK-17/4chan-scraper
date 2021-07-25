@@ -55,7 +55,7 @@ class Metadata:
         boards_list = dict()
         
         for index,each in enumerate(raw_data):
-            boards_list[str(index)] = {"board_name":each['title'], "board_code":each['board']} # make custom dictionary
+            boards_list[str(index)] = {"board_name":each['title'], "board_code":each['board'], "work_safe":each['ws_board']} # make custom dictionary
 
         return boards_list
     
@@ -63,14 +63,18 @@ class Metadata:
         
         """ Display List of boards to select from """
         
+        ch = int(input('\n1.NSFW Boards\n2.General Boards\nEnter your choice:'))
+        print('\nSelect a board from the following:')
         for index,details in self.boards_list.items():
-            print(f"{index}.{details['board_name']}")
-    
+            if ch==1 and int(details['work_safe'])==0:
+                print(f"{index}.{details['board_name']}")
+            if ch==2 and int(details['work_safe'])==1:
+                print(f"{index}.{details['board_name']}")
+
     def select_board(self) -> str:
 
         """ Driver function to select board. """
         
-        print('\nSelect a board from the following:')
         self.display_board_list()
         selected_board_index = input('\nEnter Board Number:')
         selected_board_code = self.boards_list[selected_board_index]['board_code']
@@ -131,14 +135,16 @@ class Page:
     """
     
     BASE_URL = 'https://boards.4chan.org/<board_code>/thread/' # root URL for every thread on random board
+    THREAD_METADATA = 'https://a.4cdn.org/<board_code>/thread/<thread_id>.json' # gathering information about the thread
     SAVE_DIR = str(os.curdir)+'/data'# root folder for saving images 
     TIMEOUT = 10 # global timeout for requests made
     
-    def __init__(self,board_code,thread:str) -> None:
+    def __init__(self,metadata:Metadata) -> None:
         
         """ Inititalizing class and getting the page information. """
         
-        logger.info(f'initializing Thread : {thread}')
+        board_code,thread = metadata.board_code,metadata.thread_id
+        logger.info(f'Board Code:{board_code}|Thread:{thread}')
         self.BASE_URL = self.BASE_URL.replace('<board_code>',board_code)
         
         self.thread_id = thread # thread-ID from the board
@@ -320,14 +326,20 @@ def exec_main() -> None:
             
             All the images from the board will be saved in the data folder.  ''')
     
-    # pause introduced to read the message
-    time.sleep(8)
-    
-    logger.info(f'Execution started.')
-    metadata = Metadata()
-    page = Page(metadata.board_code,metadata.thread_id)
-    logger.info('Execution completed.')
-    print(f'All your downloaded files are available here : {page.save_path}')
+    # menu driven execution
+    while True:
+        ch = input('''
+        1. Continue.
+        2. Exit.
+        Enter your choice : ''')
+
+        if int(ch)==2:break #stopping execution
+        
+        logger.info(f'Execution started.')
+        metadata = Metadata()
+        page = Page(metadata)
+        logger.info('Execution completed.')
+        print(f'All your downloaded files are available here : {page.save_path}')
     
     # closing message 
     print('\nThanks for using 4chan-scraper.\n')
