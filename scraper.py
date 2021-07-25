@@ -63,13 +63,16 @@ class Metadata:
         
         """ Display List of boards to select from """
         
-        ch = int(input('\n1.NSFW Boards\n2.General Boards\nEnter your choice:'))
+        ch = int(input('\n1.NSFW Boards\n2.General Boards\n3.All Boards\nEnter your choice:')) # take choice on NSFW/SFW board.
         print('\nSelect a board from the following:')
         for index,details in self.boards_list.items():
             if ch==1 and int(details['work_safe'])==0:
                 print(f"{index}.{details['board_name']}")
             if ch==2 and int(details['work_safe'])==1:
                 print(f"{index}.{details['board_name']}")
+            if ch==3:
+                print(f"{index}.{details['board_name']}")
+
 
     def select_board(self) -> str:
 
