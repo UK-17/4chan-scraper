@@ -1,5 +1,6 @@
 import logging
 import logging.config
+import time
 import os
 from typing import List
 import requests
@@ -32,6 +33,7 @@ class Metadata:
         
         """ Initialize all the metadata. Select board code. """
 
+        print('\nGathering metadata on the threads...')
         self.boards_list = self.get_boards_list()
         self.board_code = self.select_board()
         self.threads = self.get_board_threads()
@@ -41,6 +43,7 @@ class Metadata:
         
         """ Get a list of image boards and codes. """
 
+        print('\nFetching all the imageboards available...')
         try:
             response = requests.get(Metadata.BOARD_DATA,timeout=Metadata.TIMEOUT) # make request to API
         except Exception as e:
@@ -67,7 +70,7 @@ class Metadata:
 
         """ Driver function to select board. """
         
-        print('Select a board')
+        print('\nSelect a board from the following:')
         self.display_board_list()
         selected_board_index = input('\nEnter Board Number:')
         selected_board_code = self.boards_list[selected_board_index]['board_code']
@@ -77,6 +80,7 @@ class Metadata:
         
         """ Get a list of threads available for the board """
         
+        print(f'Getting list of threads currently on /{self.board_code} board...')
         threads_list = list()
         url = self.CATALOG_DATA.replace('<board_code>',self.board_code) # getting threads for selected board
         
@@ -104,10 +108,13 @@ class Metadata:
     
         display_view = pd.DataFrame(self.threads,columns=['Thread-ID','Label','Images'])
         display_view = display_view.sort_values(by='Images')
-        print('\n')
+        print(f'\nThreads currently on /{self.board_code} board :')
         print(display_view.to_string(index=False))
     
     def select_thread(self) -> str:
+       
+        """ Select a thread from the list of threads displayed"""
+       
         self.display_threads_list()
         thread_id = input('\nEnter Thread-ID : ')
         return thread_id
@@ -147,11 +154,11 @@ class Page:
 
         """ Name of the directory is same as the thread. """
         
-        logger.info(f'Making directory to save all images')
-        
+        print(f'\nMaking a new directory to save images...')
         path = os.path.join(self.SAVE_DIR,self.thread_id)
         os.makedirs(path) # new directory made
-        logger.info(f'New directory made: {path}')
+        logger.info(f'Image save directory: {path}')
+        print(f'New directory : {str(path)}')
         
         return str(path)
 
@@ -162,6 +169,7 @@ class Page:
         
         logger.info(f'Fetching page | URL:{self.url}')
         
+        print('\nGetting contents of the thread page...')
         try:
             page = requests.get(self.url,timeout=Page.TIMEOUT) # page fetched
         except Exception as e:
@@ -175,6 +183,7 @@ class Page:
 
         """ Parsing the page using BeautifulSoup and HTML5LIB. """
 
+        print('Scanning and parsing the HTML page...')
         logger.info(f'Parsing HTML content | BeautifulSoup+html5lib')
         soup = BeautifulSoup(self.page.content,'html5lib') # making a soup-object
         
@@ -184,6 +193,7 @@ class Page:
 
         """ Extract all the links in the page with a given tag. """
 
+        print('Extracting image links from the HTML page...')
         images = list()
         image_list = self.soup.select(tag) # select all elements with the specified tag
         
@@ -202,6 +212,7 @@ class Page:
 
         
         logger.info(f'No of images : {len(images)}')
+        print(f'A total of {str(len(images))} image links found on the page.')
         
         return images
     
@@ -240,6 +251,7 @@ class Page:
         for image in self.images:
             extension = 'jpg' if '.jpg' in image else 'png'
             count+=1
+            print(f'Processing Image #{count}')
             image_bytes = self.get_image_file(image) #fetch the image
             if image_bytes is None:continue
             image_path = self.save_path+ f'/image_{count}.{extension}' # path to save image 
@@ -250,6 +262,7 @@ class Page:
         
         """ Verify the images and catch the corrupt ones."""
         
+        print('Checking for corrupt files...')
         self.corrupt_files = list()
         
         for filename in listdir(self.save_path):
@@ -275,6 +288,7 @@ class Page:
             if os.path.exists(file): # check if file exists
                 os.remove(file) # removing file from disk
                 logger.info(f'{file} deleted.')
+                print(f'Deleting {file} due to corruption...')
             else:
                 logger.critical(f'{file} does not exist')
         
@@ -295,10 +309,26 @@ def exec_main() -> None:
     
     """ Main driver function to run the code. """
     
+    # welcome message
+    print(f''' *** Welcome to 4chan-scraper.***
+                   Author : Utkarsh-kushagra (UK!7)
+            
+            Step 1 : Choose a board of your interest
+            Step 2 : Choose a thread from that board
+            
+            All the images from the board will be saved in the data folder.  ''')
+    
+    # pause introduced to read the message
+    time.sleep(10)
+    
     logger.info(f'Execution started.')
     metadata = Metadata()
     page = Page(metadata.board_code,metadata.thread_id)
     logger.info('Execution completed.')
+    print(f'All your downloaded files are available here : {page.save_path}')
+    
+    # closing message 
+    print('\nThanks for using 4chan-scraper.\n')
 
 
 
