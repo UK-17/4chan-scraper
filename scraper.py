@@ -262,6 +262,8 @@ class Page:
         
         """ Verify the images and catch the corrupt ones."""
         
+        print('Waiting for images to get downloaded... ')
+        time.sleep(10)
         print('Checking for corrupt files...')
         self.corrupt_files = list()
         
@@ -319,7 +321,7 @@ def exec_main() -> None:
             All the images from the board will be saved in the data folder.  ''')
     
     # pause introduced to read the message
-    time.sleep(10)
+    time.sleep(8)
     
     logger.info(f'Execution started.')
     metadata = Metadata()
