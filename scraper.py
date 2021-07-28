@@ -1,3 +1,4 @@
+from io import BytesIO
 import logging
 import logging.config
 import time
@@ -247,8 +248,13 @@ class Page:
         
         logger.info(f'Writing image.')
         
-        with open(image_path,'wb') as f: 
-            f.write(image_bytes)
+        try:
+            img_file = Image.open(BytesIO(image_bytes)) # convert bytes to Image object
+            img_file.save(fp=image_path,format=img_file.format) # saving Image object 
+        except Exception as e:
+            logger.error(e)
+            logger.critical(f'Image:{image_path} could not be handled by PIL.Image')
+            pass
         
         return f'File : {image_path}'
     
