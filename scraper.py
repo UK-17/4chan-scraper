@@ -28,7 +28,7 @@ class Metadata:
 
     TIMEOUT = 10 # global timeout for request function
     BOARD_DATA = 'https://a.4cdn.org/boards.json' # to get list of boards
-    CATALOG_DATA = 'https://a.4cdn.org/<board_code>/catalog.json' # to get threads list
+    CATALOG_DATA = 'https://a.4cdn.org/{board_code}/catalog.json' # to get threads list
     
     def __init__(self) -> None:
         
@@ -90,7 +90,7 @@ class Metadata:
         
         print(f'Getting list of threads currently on /{self.board_code} board...')
         threads_list = list()
-        url = self.CATALOG_DATA.replace('<board_code>',self.board_code) # getting threads for selected board
+        url = self.CATALOG_DATA.format(board_code=self.board_code) # getting threads for selected board
         
         try:
             response = requests.get(url,timeout=self.TIMEOUT)
@@ -138,8 +138,8 @@ class Page:
 
     """
     
-    BASE_URL = 'https://boards.4chan.org/<board_code>/thread/' # root URL for every thread on random board
-    THREAD_METADATA = 'https://a.4cdn.org/<board_code>/thread/<thread_id>.json' # gathering information about the thread
+    BASE_URL = 'https://boards.4chan.org/{board_code}/thread/' # root URL for every thread on random board
+    THREAD_METADATA = 'https://a.4cdn.org/{board_code}/thread/<thread_id>.json' # gathering information about the thread
     SAVE_DIR = str(os.curdir)+'/data'# root folder for saving images 
     TIMEOUT = 10 # global timeout for requests made
     
@@ -149,7 +149,7 @@ class Page:
         
         board_code,thread = metadata.board_code,metadata.thread_id
         logger.info(f'Board Code:{board_code}|Thread:{thread}')
-        self.BASE_URL = self.BASE_URL.replace('<board_code>',board_code)
+        self.BASE_URL = self.BASE_URL.format(board_code=board_code)
         
         self.thread_id = thread # thread-ID from the board
         self.save_path = self.__make_dir() # making a directory to save all images
@@ -338,6 +338,7 @@ def exec_main() -> None:
     # menu driven execution
     while True:
         ch = input('''
+        ----------------------
         1. Continue.
         2. Exit.
         Enter your choice : ''')
@@ -351,7 +352,11 @@ def exec_main() -> None:
         print(f'All your downloaded files are available here : {page.save_path}')
     
     # closing message 
-    print('\nThanks for using 4chan-scraper.\n')
+    print('''
+    -----------------------------------------------
+    Thank you for using 4chan-scraper. Bye-bye !!!
+    -----------------------------------------------
+    ''')
 
 
 
