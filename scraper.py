@@ -35,24 +35,24 @@ class Metadata:
         """ Initialize all the metadata. Select board code. """
 
         print('\nGathering metadata on the threads...')
-        self.boards_list = self.get_boards_list()
-        self.board_code = self.select_board()
-        self.threads = self.get_board_threads()
+        self.boards_list = self.__get_boards_list()
+        self.board_code = self.__select_board()
+        self.threads = self.__get_board_threads()
         self.thread_id = self.select_thread()
     
-    def get_boards_list(self) -> dict:
+    def __get_boards_list(self) -> dict:
         
         """ Get a list of image boards and codes. """
 
         print('\nFetching all the imageboards available...')
         try:
-            response = requests.get(Metadata.BOARD_DATA,timeout=Metadata.TIMEOUT) # make request to API
+            __response = requests.get(Metadata.BOARD_DATA,timeout=Metadata.TIMEOUT) # make request to API
         except Exception as e:
             logger.error(e) # error in making request
             logger.critical(f'Error in request. | URL : {Metadata.BOARD_DATA}')
             return None
         
-        raw_data = json.loads(response.content)['boards'] # extract json from response
+        raw_data = json.loads(__response.content)['boards'] # extract json from response
         boards_list = dict()
         
         for index,each in enumerate(raw_data):
@@ -60,7 +60,7 @@ class Metadata:
 
         return boards_list
     
-    def display_board_list(self) -> None:
+    def __display_board_list(self) -> None:
         
         """ Display List of boards to select from """
         
@@ -75,16 +75,16 @@ class Metadata:
                 print(f"{index}.{details['board_name']}")
 
 
-    def select_board(self) -> str:
+    def __select_board(self) -> str:
 
         """ Driver function to select board. """
         
-        self.display_board_list()
+        self.__display_board_list()
         selected_board_index = input('\nEnter Board Number:')
         selected_board_code = self.boards_list[selected_board_index]['board_code']
         return selected_board_code
     
-    def get_board_threads(self) -> list:
+    def __get_board_threads(self) -> list:
         
         """ Get a list of threads available for the board """
         
@@ -110,7 +110,7 @@ class Metadata:
         
         return threads_list
     
-    def display_threads_list(self) -> None:
+    def __display_threads_list(self) -> None:
 
         """ Display all threads on the selected board to select from. """
     
@@ -123,7 +123,7 @@ class Metadata:
        
         """ Select a thread from the list of threads displayed"""
        
-        self.display_threads_list()
+        self.__display_threads_list()
         thread_id = input('\nEnter Thread-ID : ')
         return thread_id
 
@@ -152,15 +152,15 @@ class Page:
         self.BASE_URL = self.BASE_URL.replace('<board_code>',board_code)
         
         self.thread_id = thread # thread-ID from the board
-        self.save_path = self.make_dir() # making a directory to save all images
+        self.save_path = self.__make_dir() # making a directory to save all images
         self.url = self.BASE_URL + thread # url of the thread
-        self.page = self.get_page() # fetching the page
-        self.soup = self.make_soup() # parsing the page
-        self.images = self.get_images('img') # collection of all images in the page
+        self.page = self.__get_page() # fetching the page
+        self.soup = self.__make_soup() # parsing the page
+        self.images = self.__get_images('img') # collection of all images in the page
         self.extract_images() # running the driver function
 
     
-    def make_dir(self) -> str:
+    def __make_dir(self) -> str:
 
         """ Name of the directory is same as the thread. """
         
@@ -173,7 +173,7 @@ class Page:
         return str(path)
 
     
-    def get_page(self) -> Response:
+    def __get_page(self) -> Response:
         
         """ Fetching HTML page using Requests library. """
         
@@ -189,7 +189,7 @@ class Page:
         
         return page
     
-    def make_soup(self) -> BeautifulSoup:
+    def __make_soup(self) -> BeautifulSoup:
 
         """ Parsing the page using BeautifulSoup and HTML5LIB. """
 
@@ -199,7 +199,7 @@ class Page:
         
         return soup
     
-    def get_images(self,tag:str) -> list:
+    def __get_images(self,tag:str) -> list:
 
         """ Extract all the links in the page with a given tag. """
 
@@ -226,7 +226,7 @@ class Page:
         
         return images
     
-    def get_image_file(self,image_link) -> bytes:
+    def __get_image_file(self,image_link) -> bytes:
         
         """ Fetching an image in raw bytes. """
         
@@ -242,7 +242,7 @@ class Page:
         
         return image_bytes
     
-    def save_image_file(self,image_bytes,image_path) -> str:
+    def __save_image_file(self,image_bytes,image_path) -> str:
         
         """ Save each image to the directory. """
         
@@ -258,7 +258,7 @@ class Page:
         
         return f'File : {image_path}'
     
-    def get_and_save_all_images(self) -> None:
+    def __get_and_save_all_images(self) -> None:
         
         """ Driver function to fetch and save each image in the list. """
         
@@ -267,13 +267,13 @@ class Page:
             extension = 'jpg' if '.jpg' in image else 'png'
             count+=1
             print(f'Processing Image #{count}')
-            image_bytes = self.get_image_file(image) #fetch the image
+            image_bytes = self.__get_image_file(image) #fetch the image
             if image_bytes is None:continue
             image_path = self.save_path+ f'/image_{count}.{extension}' # path to save image 
-            msg = self.save_image_file(image_bytes,image_path) # save image to path
+            msg = self.__save_image_file(image_bytes,image_path) # save image to path
             logger.info(f'Image saved as : {msg}')
 
-    def check_for_corrupt_files(self) -> None:
+    def __check_for_corrupt_files(self) -> None:
         
         """ Verify the images and catch the corrupt ones."""
         
@@ -295,7 +295,7 @@ class Page:
         
         logger.critical(f'List of corrupt files:{self.corrupt_files}')
     
-    def delete_corrupt_files(self) -> None:
+    def __delete_corrupt_files(self) -> None:
         
         """ Delete the files which were categorized as corrupt. """
 
@@ -315,9 +315,9 @@ class Page:
 
         """ Driver function to extract the images and save them. """
 
-        self.get_and_save_all_images()
-        self.check_for_corrupt_files()
-        self.delete_corrupt_files()
+        self.__get_and_save_all_images()
+        self.__check_for_corrupt_files()
+        self.__delete_corrupt_files()
 
 
 
