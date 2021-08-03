@@ -10,7 +10,10 @@ from PIL import Image
 from bs4 import BeautifulSoup
 import pandas as pd
 from requests.models import Response
+from pathlib import Path
 import json
+from zipfile import ZipFile
+import shutil
 logging.config.fileConfig('logging.conf')
 logger = logging.getLogger(__name__)
 
@@ -38,7 +41,7 @@ class Metadata:
         self.boards_list = self.__get_boards_list()
         self.board_code = self.__select_board()
         self.threads = self.__get_board_threads()
-        self.thread_id = self.select_thread()
+        self.thread_id = self.__select_thread()
     
     def __get_boards_list(self) -> dict:
         
@@ -119,7 +122,7 @@ class Metadata:
         print(f'\nThreads currently on /{self.board_code} board :')
         print(display_view.to_string(index=False))
     
-    def select_thread(self) -> str:
+    def __select_thread(self) -> str:
        
         """ Select a thread from the list of threads displayed"""
        
@@ -140,7 +143,7 @@ class Page:
     
     BASE_URL = 'https://boards.4chan.org/{board_code}/thread/' # root URL for every thread on random board
     THREAD_METADATA = 'https://a.4cdn.org/{board_code}/thread/<thread_id>.json' # gathering information about the thread
-    SAVE_DIR = str(os.curdir)+'/data'# root folder for saving images 
+    SAVE_DIR = str(os.curdir) # root folder for saving images 
     TIMEOUT = 10 # global timeout for requests made
     
     def __init__(self,metadata:Metadata) -> None:
@@ -157,7 +160,9 @@ class Page:
         self.page = self.__get_page() # fetching the page
         self.soup = self.__make_soup() # parsing the page
         self.images = self.__get_images('img') # collection of all images in the page
-        self.extract_images() # running the driver function
+        self.is_completed = self.__extract_images() # running the driver function
+
+        logger.info(f'Execution Successful : {self.is_completed}') # if True then all execution was error free.
 
     
     def __make_dir(self) -> str:
@@ -278,7 +283,7 @@ class Page:
         """ Verify the images and catch the corrupt ones."""
         
         print('Waiting for images to get downloaded... ')
-        time.sleep(10)
+        time.sleep(3)
         print('Checking for corrupt files...')
         self.corrupt_files = list()
         
@@ -311,14 +316,68 @@ class Page:
         
         logger.info(f'Removed {len(self.corrupt_files)} files.')
     
-    def extract_images(self) -> None:
+    def __get_all_file_paths(self):
+        """ Recurisvely getting all file paths of the save directory. """
+  
+        # initializing empty file paths list
+        file_paths = []
+    
+        # crawling through directory and subdirectories
+        for root, directories, files in os.walk(self.save_path):
+            for filename in files:
+                # join the two strings in order to form the full filepath.
+                filepath = os.path.join(root, filename)
+                file_paths.append(filepath)
+    
+        logger.info(f'Files to archieve : {file_paths}')
+        # returning all file paths
+        return file_paths
+    
+    def __remove_dir(self):
+        
+        """ Removing temp folder and files. """
+
+        try:
+            shutil.rmtree(self.save_path)
+        except Exception as e:
+            logger.error(e)
+            logger.critical(f'Could not remove {self.save_path}')
+
+
+
+    
+    def __archive_dir(self) -> None:
+
+        """ Archiving the thread images directory. """
+
+        home_path = Path.home()
+        logger.info(f'Archiving images to {home_path}')
+        files_to_archieve = self.__get_all_file_paths()
+        with ZipFile(f'{self.thread_id}.zip','w') as zip:
+            # writing each file one by one
+            for file in files_to_archieve:
+                zip.write(file)
+        
+        shutil.move(f'{self.thread_id}.zip',home_path)
+        self.__remove_dir()
+    
+    def __extract_images(self) -> bool:
 
         """ Driver function to extract the images and save them. """
-
-        self.__get_and_save_all_images()
-        self.__check_for_corrupt_files()
-        self.__delete_corrupt_files()
-
+        
+        try:
+            self.__get_and_save_all_images()
+            self.__check_for_corrupt_files()
+            self.__delete_corrupt_files()
+            self.__archive_dir()
+            flag=True
+        
+        except Exception as e:
+            logger.error(e)
+            logger.critical(f'Error in the driver function to extract images.')
+            flag=False
+        
+        return flag
 
 
 
@@ -333,7 +392,7 @@ def exec_main() -> None:
             Step 1 : Choose a board of your interest
             Step 2 : Choose a thread from that board
             
-            All the images from the board will be saved in the data folder.  ''')
+            All the images from the board will be saved in a zip file.  ''')
     
     # menu driven execution
     while True:
