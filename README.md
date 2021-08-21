@@ -6,4 +6,5 @@
 2. python scraper.py
 
 ### Running Instructions
-1.
+1. Menu driven console program.
+2. Follow the on screen instructions.
