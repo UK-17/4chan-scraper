@@ -142,7 +142,7 @@ class Page:
     """
     
     BASE_URL = 'https://boards.4chan.org/{board_code}/thread/' # root URL for every thread on random board
-    THREAD_METADATA = 'https://a.4cdn.org/{board_code}/thread/<thread_id>.json' # gathering information about the thread
+    THREAD_METADATA = 'https://a.4cdn.org/{board_code}/thread/{thread_id}.json' # gathering information about the thread
     SAVE_DIR = str(os.curdir) # root folder for saving images 
     TIMEOUT = 10 # global timeout for requests made
     
