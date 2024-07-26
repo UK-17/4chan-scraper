@@ -41,7 +41,8 @@ class Metadata:
         self.threads = self.__get_board_threads()
         self.thread_id = self.__select_thread()
     
-    def __get_boards_list(self) -> dict:
+    @staticmethod
+    def __get_boards_list() -> dict:
         
         """ Get a list of image boards and codes. """
 
