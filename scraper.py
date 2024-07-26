@@ -34,25 +34,18 @@ class Website:
         print('\nGathering metadata on the threads...')
         self.boards = []
 
-    def get_boards(self) -> dict:
+    def fetch_boards(self) -> None:
 
         """ Get a list of image boards and codes. """
 
         print('\nFetching all the image boards available...')
         try:
             __response = requests.get(Website.BOARD_DATA, timeout=TIMEOUT)  # make request to API
+            __board_data = json.loads(__response.content)['boards']
+            self.boards = [Board(index=i + 1, b_data=board) for i, board in enumerate(__board_data)]
         except Exception as e:
             logger.error(e)  # error in making request
             logger.critical(f'Error in request. | URL : {Website.BOARD_DATA}')
-            return {}
-
-        __index = 0
-        __board_data = json.loads(__response.content)['boards']  # extract json from response
-
-        for board in __board_data:
-            __index += 1
-            board['index'] = __index
-            self.boards.append(Board(board))
 
     def display_boards(self) -> None:
 
@@ -62,12 +55,8 @@ class Website:
             '\n1.NSFW Boards\n2.General Boards\n3.All Boards\nEnter your choice:'))  # take choice on NSFW/SFW board.
         print('\nSelect a board from the following:')
         for board in self.boards:
-            if ch == 1 and int(board.work_safe) == 0:
-                print(f"{board.index}.{board.name}")
-            if ch == 2 and int(board.work_safe) == 1:
-                print(f"{board.index}.{board.name}")
-            if ch == 3:
-                print(f"{board.index}.{board.name}")
+            if (ch == 1 and not board.work_safe) or (ch == 2 and board.work_safe) or (ch == 3):
+                print(f"{board.index}. {board.name}")
 
 
 class Board:
@@ -76,34 +65,29 @@ class Board:
 
     """
 
-    CATALOG_DATA = 'https://a.4cdn.org/{board_code}/catalog.json'  # to get threads list
-
-    def __init__(self, b_data: dict):
-        self.index = b_data['index']
+    def __init__(self, b_data: dict, index: int):
+        self.index = index
         self.name = b_data['title']
         self.code = b_data['board']
         self.work_safe = b_data['ws_board']
+        self.url = f'https://a.4cdn.org/{self.code}/catalog.json'
         self.threads = []
 
-    def get_board_threads(self):
+    def fetch_threads(self):
 
         """ Get a list of threads available for the board """
 
         print(f'Getting list of threads currently on /{self.name} board...')
-        url = self.CATALOG_DATA.format(board_code=self.code)  # getting threads for selected board
 
         try:
-            response = requests.get(url, timeout=TIMEOUT)
+            response = requests.get(self.url, timeout=TIMEOUT)
+            threads_data = json.loads(response.content)
+            self.threads = [Thread(t_data=thread_detail, b_code=self.code) for page in threads_data for thread_detail in
+                            page['threads']]
         except Exception as e:
             logger.error(e)  # timeout error
-            logger.critical(f'Error in request | URL:{url}')
+            logger.critical(f'Error in request | URL:{self.url}')
             return
-
-        raw_data = json.loads(response.content)
-        for each in raw_data:
-            for thread in each['threads']:
-                thread['board_code'] = self.code
-                self.threads.append(Thread(thread))
 
     def display_board_threads(self) -> None:
 
@@ -127,15 +111,15 @@ class Thread:
     THREAD_METADATA = 'https://a.4cdn.org/{board_code}/thread/{thread_id}.json'  # gathering info about the thread
     SAVE_DIR = str(os.curdir)  # root folder for saving images
 
-    def __init__(self, t_data: dict) -> None:
+    def __init__(self, t_data: dict, b_code: int) -> None:
 
         """ Initializing class and getting the page information. """
 
         self.id = t_data['no']
         self.info = t_data['semantic_url']
         self.images_count = int(t_data['images'])
-        self.images = None
-        self.url = self.BASE_URL.format(board_code=t_data['board_code']) + str(self.id)  # url of the thread
+        self.images = []
+        self.url = self.BASE_URL.format(board_code=b_code) + str(self.id)  # url of the thread
         self.save_path = None
         self.page = None
         self.soup = None
@@ -385,14 +369,14 @@ def exec_main() -> None:
         logger.info(f'Execution started.')
 
         website = Website()
-        website.get_boards()
+        website.fetch_boards()
         website.display_boards()
 
         board_ch = int(input('\nEnter Board Number:'))
         for board in website.boards:
             if board.index == board_ch:
                 print(board.index)
-                board.get_board_threads()
+                board.fetch_threads()
                 board.display_board_threads()
                 thread_id = int(input('\nEnter Thread-ID : '))
                 for thread in board.threads:
