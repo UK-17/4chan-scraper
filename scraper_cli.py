@@ -212,7 +212,7 @@ class Thread:
 
         """ Save each image to the directory. """
 
-        logger.info(f'Writing image.')
+        logger.debug(f'Writing image.')
 
         try:
             img_file = Image.open(BytesIO(image_bytes))  # convert bytes to Image object
@@ -389,32 +389,50 @@ def exec_main() -> None:
 
     # menu driven execution
     while True:
+
+        # Menu Choice
         ch = input('''
         ----------------------
         1. Continue.
         2. Exit.
         Enter your choice : ''')
 
+        # stopping execution
         if int(ch) == 2:
-            break  # stopping execution
+            break
 
         logger.info(f'Execution started.')
 
+        # Initializing Boards in 4chan
         website = Website()
         website.fetch_boards()
         website.display_boards()
 
+        # Select your board
         board_ch = int(input('\nEnter Board Number:'))
+
         for board in website.boards:
+
             if board.index == board_ch:
-                print(board.index)
+
+                # Threads belonging to the selected board
                 board.fetch_threads()
                 board.display_board_threads()
-                thread_id = int(input('\nEnter Thread-ID : '))
+
+                thread_ch = input('\nEnter Thread-ID : ')
+                if thread_ch.lower().strip() == 'all':
+                    thread_id = 0
+                else:
+                    thread_id = int(thread_ch)
+
                 for thread in board.threads:
-                    if thread_id == thread.id:
+
+                    if thread_id == 0 or thread_id == thread.id:
+
+                        print(f'*** Running the scraper for {thread.info} ***')
                         thread.run_scraper()
                         logger.info(f'Execution successful: {thread.is_completed}.')
+
                         print(f'All your downloaded files are available here : {thread.save_path}')
                         print(f'End of {thread.info} thread extraction. \n')
 
