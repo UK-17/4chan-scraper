@@ -121,6 +121,7 @@ class Thread:
         self.images = []
         self.url = self.BASE_URL.format(board_code=b_code) + str(self.id)  # url of the thread
         self.save_path = None
+        self.archive_loc = None
         self.page = None
         self.soup = None
         self.is_completed = False
@@ -130,12 +131,10 @@ class Thread:
 
         """ Name of the directory is same as the thread. """
 
-        print(f'\nMaking a new directory to save images...')
+
         path = os.path.join(self.SAVE_DIR, str(self.id))
         os.makedirs(path)  # new directory made
         logger.info(f'Image save directory: {path}')
-        print(f'New directory : {str(path)}')
-
         self.save_path = str(path)
 
     def get_page(self) -> None:
@@ -144,9 +143,9 @@ class Thread:
 
         logger.info(f'Fetching page | URL:{self.url}')
 
-        print('\nGetting contents of the thread page...')
         try:
             page = requests.get(self.url, timeout=TIMEOUT)  # page fetched
+            logger.info(f'Page {self.info}_{self.id} fetched.')
         except Exception as e:
             logger.error(e)  # timeout error
             logger.critical(f'URL:{self.url} | Timeout {TIMEOUT}s reached')
@@ -158,7 +157,6 @@ class Thread:
 
         """ Parsing the page using BeautifulSoup and HTML5LIB. """
 
-        print('Scanning and parsing the HTML page...')
         logger.info(f'Parsing HTML content | BeautifulSoup+html5lib')
         soup = BeautifulSoup(self.page.content, 'html5lib')  # making a soup-object
 
@@ -168,7 +166,6 @@ class Thread:
 
         """ Extract all the links in the page with a given tag. """
 
-        print('Extracting image links from the HTML page...')
         images = list()
         image_list = self.soup.select(tag)  # select all elements with the specified tag
 
@@ -190,7 +187,6 @@ class Thread:
                 images.append(item)
 
         logger.info(f'No of images : {len(images)}')
-        print(f'A total of {str(len(images))} image links found on the page.')
 
         self.images = images
 
@@ -212,7 +208,7 @@ class Thread:
         return image_bytes
 
     @staticmethod
-    def save_image_file(image_bytes, image_path) -> str:
+    def save_image_file(image_bytes, image_path) -> (bool, str):
 
         """ Save each image to the directory. """
 
@@ -221,18 +217,22 @@ class Thread:
         try:
             img_file = Image.open(BytesIO(image_bytes))  # convert bytes to Image object
             img_file.save(fp=image_path, format=img_file.format)  # saving Image object
+            flag = True
         except Exception as e:
             logger.error(e)
             logger.critical(f'Image:{image_path} could not be handled by PIL.Image')
-            pass
+            flag = False
 
-        return f'File : {image_path}'
+        return flag, f'File : {image_path}'
 
-    def get_and_save_all_images(self) -> None:
+    def get_and_save_all_images(self) -> (int, int, int):
 
         """ Driver function to fetch and save each image in the list. """
 
         count = 0
+        saved = 0
+        error = 0
+
         for image in self.images:
             extension = 'jpg' if '.jpg' in image else 'png'
             count += 1
@@ -241,8 +241,15 @@ class Thread:
             if image_bytes is None:
                 continue
             image_path = self.save_path + f'/image_{count}.{extension}'  # path to save image
-            msg = self.save_image_file(image_bytes, image_path)  # save image to path
-            logger.info(f'Image saved as : {msg}')
+            msg, flag = self.save_image_file(image_bytes, image_path)  # save image to path
+            if flag:
+                logger.info(f'Image saved as : {msg}')
+                saved += 1
+            else:
+                logger.warning(f'{msg} could not be saved')
+                error += 1
+
+        return count, saved, error
 
     def check_for_corrupt_files(self) -> None:
 
@@ -316,20 +323,22 @@ class Thread:
         home_path = Path.home()
         logger.info(f'Archiving images to {home_path}')
         files_to_archive = self.get_all_file_paths()
-        with ZipFile(f'{self.id}_{self.info}.zip', 'w') as zipper:
-            # writing each file one by one
+        self.archive_loc = f'{self.id}_{self.info}.zip'
+        with ZipFile(file=self.archive_loc, mode='w') as zipper:
             for file in files_to_archive:
                 zipper.write(file)
 
-        shutil.move(f'{self.id}_{self.info}.zip', home_path)
+        shutil.move(self.archive_loc, home_path)
         self.remove_dir()
+        self.save_path = f'{home_path}/{self.archive_loc}'
 
     def extract_images(self) -> None:
 
         """ Driver function to extract the images and save them. """
 
         try:
-            self.get_and_save_all_images()
+            total, saved, error = self.get_and_save_all_images()
+            print(f'Images Download Summary :: Total:{total}, Saved:{saved}, Error:{error}')
             self.check_for_corrupt_files()
             self.delete_corrupt_files()
             self.archive_dir()
@@ -341,6 +350,29 @@ class Thread:
             flag = False
 
         self.is_completed = flag
+
+    def run_scraper(self) -> None:
+
+        print(f'\nStep 1 : Making a new temp. directory to save images...')
+        self.make_dir()
+        print(f'New temp directory created : {self.save_path}')
+
+        print(f'\nStep 2 : Getting contents of the thread page {self.info}...')
+        self.get_page()
+        print(f'Page fetched from server, URL: {self.url}')
+
+        print('\nStep 3 : Scanning and parsing the HTML page...')
+        self.make_soup()
+        print(f'HTML page is parsed successfully.')
+
+        print('\nStep 4 : Extracting only image links from the HTML page...')
+        self.get_images('img')
+        print(f'{len(self.images)} image links found on the HTML page...')
+
+        print(f'\nStep 5 : Downloading images in real time and saving them.')
+        self.extract_images()
+        print('All images downloaded and saved.')
+
 
 
 def exec_main() -> None:
@@ -381,13 +413,10 @@ def exec_main() -> None:
                 thread_id = int(input('\nEnter Thread-ID : '))
                 for thread in board.threads:
                     if thread_id == thread.id:
-                        thread.make_dir()
-                        thread.get_page()
-                        thread.make_soup()
-                        thread.get_images('img')
-                        thread.extract_images()
+                        thread.run_scraper()
                         logger.info(f'Execution successful: {thread.is_completed}.')
-                        print(f'All your downloaded files are available here : ')
+                        print(f'All your downloaded files are available here : {thread.save_path}')
+                        print(f'End of {thread.info} thread extraction. \n')
 
     # closing message 
     print('''
